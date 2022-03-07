@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="sys-insurance-externalprovider-apiFlow" doc:id="a0016e10-ac1c-4ec9-b73a-e404a10e3a0d" >
+		<http:listener doc:name="Listener" doc:id="9973511a-1bd2-4f3a-a561-d35af948d0ce" config-ref="HTTP_Listener_config" path="/createExternal">
+			<http:response statusCode="#[vars.httpStatus default 200]" />
+			<http:error-response statusCode="#[vars.httpStatus default 500]" />
+		</http:listener>
+		<logger level="INFO" doc:name="start Logger" doc:id="d0ec0840-420f-4e7e-b689-3a32e80f7be4" message="Start of external Provider Insurance Flow"/>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="22e4fbb4-12c0-4353-9800-999c5db6c7c8" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into insuranceapi (policyno, description, coverage, smoking, minage, maxage, minsalary, smokingsurge, drinking, drinkingsurge, illness, illnesssurge, premiumage, basepremium, agesurge, surgeyears, provider)values(:policyno, :description, :coverage, :smoking, :minage, :maxage, :minsalary, :smokingsurge, :drinking, :drinkingsurge, :illness, :illnesssurge, :premiumage, :basepremium, :agesurge, :surgeyears, :provider)]]></db:sql>
+		</db:bulk-insert>
+		<ee:transform doc:name="map to target" doc:id="c1bd1adc-d9d7-4e1b-beee-41077c5369d0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "data inserted"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="end Logger" doc:id="acf566e7-71e2-4edc-a98f-6f5a98953180" message='"Table added"'/>
+	</flow>
+	<flow name="sys-insurance-externalprovider-apiFlow1" doc:id="ea774d12-5d84-4eab-80b4-2296a88e5008" >
+		<http:listener doc:name="Listener" doc:id="963566db-c1b0-4b10-aa03-7ce3c24ef222" config-ref="HTTP_Listener_config" path="/getPolicy">
+			<http:response statusCode="#[vars.httpStatus default 200]" />
+			<http:error-response statusCode="#[vars.httpStatus default 500]" />
+		</http:listener>
+		<logger level="INFO" doc:name="startLogger" doc:id="10fd18b2-300c-4fbd-8d37-8532777a3524" message='"Starting of getting policies for customer "'/>
+		<ee:transform doc:name="set where query" doc:id="46e8e017-f7fd-4ae6-96ff-0dfa86db278a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+var wherequery = (if(attributes.queryParams.smoking != "No") ('smoking=\'Yes\' and ') else '')
+							++ (if(attributes.queryParams.drinking != "No") ('drinking=\'Yes\' and ') else '')
+							++ (if(attributes.queryParams.illness != "No") ('illness=\'Yes\' and ') else '')
+							++ 'minage < ' ++ attributes.queryParams.age ++ ' and maxage > ' ++ attributes.queryParams.age
+							++ ' and minsalary <= ' ++ attributes.queryParams.salary
+output application/java
+---
+wherequery]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="57aaf4bc-4050-485a-a4c9-b7a3ed8e66fb" variableName="wherequery"/>
+		<logger level="INFO" doc:name="Logger" doc:id="75805e20-31a6-4657-a71a-14984a1e471e" message="Where query #[vars.wherequery]"/>
+		<db:select doc:name="Select" doc:id="8d499d12-4653-4811-85e2-c16966e5e7b1" config-ref="Database_Config">
+			<db:sql >#["select * from insuranceapi where $(vars.wherequery)"]</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"age" : attributes.queryParams.age as Number,
+	"salary" : attributes.queryParams.salary as Number,
+	"smoking" : attributes.queryParams.smoking,
+	"drinking" : attributes.queryParams.drinking,
+	"illness" : attributes.queryParams.illness
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="d34cd0e9-ea67-4411-9c10-de65e83ddc23" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<logger level="INFO" doc:name="dataLogger" doc:id="76c1beb7-0802-4915-a819-3efd06f6768f" message="Data to process #[payload]" />
+				<ee:transform doc:name="map to target" doc:id="be280432-14e3-4db7-b5fe-39496667fba0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+		</choice>
+		<logger level="INFO" doc:name="endLogger" doc:id="480019e9-12d9-4f0d-b3dd-41f52cf9b524" message='"Ending of getting policies for customer "' />
+	</flow>
+</mule>
