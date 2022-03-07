@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="getQuote" format="json">
+      <types:shape format="weave" example="examples/externalAPI.json"><![CDATA[%dw 2.0
+
+type getQuote = Array<{|  policyno: Number {"typeId": "int"},   description: String,   coverage: Number {"typeId": "double"},   smoking: String,   minage: Number {"typeId": "int"},   maxage: Number {"typeId": "int"},   minsalary: Number {"typeId": "int"},   smokingsurge: Number {"typeId": "int"},   drinking: String,   drinkingsurge: Number {"typeId": "int"},   illness: String,   illnesssurge: Number {"typeId": "int"},   premiumage: Number {"typeId": "int"},   basepremium: Number {"typeId": "int"},   agesurge: Number {"typeId": "int"},   surgeyears: Number {"typeId": "int"},   provider: String|}> {"example": "[{\\\"policyno\\\":123456,\\\"description\\\":\\\"LIC Policy\\\",\\\"coverage\\\":10000000.00,\\\"smoking\\\":\\\"Yes\\\",\\\"minage\\\":20,\\\"maxage\\\":40,\\\"minsalary\\\":50000,\\\"smokingsurge\\\":5,\\\"drinking\\\":\\\"No\\\",\\\"drinkingsurge\\\":0,\\\"illness\\\":\\\"Yes\\\",\\\"illnesssurge\\\":10,\\\"premiumage\\\":30,\\\"basepremium\\\":10000,\\\"agesurge\\\":5,\\\"surgeyears\\\":10,\\\"provider\\\":\\\"LIC\\\"},{\\\"policyno\\\":123457,\\\"description\\\":\\\"LIC Policy\\\",\\\"coverage\\\":10000000.00,\\\"smoking\\\":\\\"No\\\",\\\"minage\\\":20,\\\"maxage\\\":40,\\\"minsalary\\\":50000,\\\"smokingsurge\\\":0,\\\"drinking\\\":\\\"No\\\",\\\"drinkingsurge\\\":0,\\\"illness\\\":\\\"No\\\",\\\"illnesssurge\\\":0,\\\"premiumage\\\":30,\\\"basepremium\\\":10000,\\\"agesurge\\\":5,\\\"surgeyears\\\":10,\\\"provider\\\":\\\"LIC\\\"},{\\\"policyno\\\":123458,\\\"description\\\":\\\"HDFC ERGO\\\",\\\"coverage\\\":12000000.00,\\\"smoking\\\":\\\"Yes\\\",\\\"minage\\\":20,\\\"maxage\\\":50,\\\"minsalary\\\":30000,\\\"smokingsurge\\\":2,\\\"drinking\\\":\\\"Yes\\\",\\\"drinkingsurge\\\":5,\\\"illness\\\":\\\"Yes\\\",\\\"illnesssurge\\\":8,\\\"premiumage\\\":20,\\\"basepremium\\\":12000,\\\"agesurge\\\":4,\\\"surgeyears\\\":10,\\\"provider\\\":\\\"HDFC\\\"},{\\\"policyno\\\":123459,\\\"description\\\":\\\"Star Health\\\",\\\"coverage\\\":15000000.00,\\\"smoking\\\":\\\"No\\\",\\\"minage\\\":20,\\\"maxage\\\":40,\\\"minsalary\\\":50000,\\\"smokingsurge\\\":0,\\\"drinking\\\":\\\"Yes\\\",\\\"drinkingsurge\\\":8,\\\"illness\\\":\\\"Yes\\\",\\\"illnesssurge\\\":5,\\\"premiumage\\\":25,\\\"basepremium\\\":15000,\\\"agesurge\\\":8,\\\"surgeyears\\\":5,\\\"provider\\\":\\\"StarHealth\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#be280432-14e3-4db7-b5fe-39496667fba0">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="getQuote"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
